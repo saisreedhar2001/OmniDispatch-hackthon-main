@@ -133,12 +133,6 @@ interface EmergencyContact {
 }
 
 export default function GuardianPage() {
-   const apiBaseUrl = useRef<string>('')
-   
-   useEffect(() => {
-     apiBaseUrl.current = getApiBaseUrl()
-   }, [])
-
    const [locationInput, setLocationInput] = useState('')
    const [searchQuery, setSearchQuery] = useState('')
    const [loading, setLoading] = useState(false)
@@ -156,7 +150,7 @@ export default function GuardianPage() {
     
     setLoading(true)
     try {
-      const response = await fetch(API_ENDPOINTS.GUARDIAN_SEARCH(apiBaseUrl.current), {
+      const response = await fetch(API_ENDPOINTS.GUARDIAN_SEARCH(getApiBaseUrl()), {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({ location: locationInput })
@@ -210,7 +204,7 @@ export default function GuardianPage() {
           const { latitude, longitude } = position.coords
           
           try {
-            const response = await fetch(API_ENDPOINTS.GUARDIAN_SEARCH(apiBaseUrl.current), {
+            const response = await fetch(API_ENDPOINTS.GUARDIAN_SEARCH(getApiBaseUrl()), {
                method: 'POST',
                headers: { 'Content-Type': 'application/json' },
                body: JSON.stringify({ 
@@ -312,7 +306,7 @@ export default function GuardianPage() {
     setLoading(true)
     
     try {
-      const response = await fetch(API_ENDPOINTS.GUARDIAN_BUILDING(apiBaseUrl.current), {
+      const response = await fetch(API_ENDPOINTS.GUARDIAN_BUILDING(getApiBaseUrl()), {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({ building_id: building.id })

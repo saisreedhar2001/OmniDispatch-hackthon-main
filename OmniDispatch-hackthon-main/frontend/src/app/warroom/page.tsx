@@ -89,13 +89,6 @@ const DispatchMap = dynamic(() => import("@/components/dispatch/dispatch-map"), 
 });
 
 export default function WarRoom() {
-  // API Configuration
-  const apiBaseUrl = useRef<string>("");
-  
-  // Initialize API URL on client side
-  useEffect(() => {
-    apiBaseUrl.current = getApiBaseUrl();
-  }, []);
 
   // State
   const [isCallActive, setIsCallActive] = useState(false);
@@ -168,7 +161,7 @@ export default function WarRoom() {
       setUserLocation({ lat, lng });
       // Initialize responders near user's location
       try {
-        await fetch(API_ENDPOINTS.RESPONDERS_INIT(apiBaseUrl.current), {
+        await fetch(API_ENDPOINTS.RESPONDERS_INIT(getApiBaseUrl()), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lat, lng }),
@@ -225,7 +218,7 @@ export default function WarRoom() {
 
   const fetchResponders = async () => {
     try {
-      const res = await fetch(API_ENDPOINTS.RESPONDERS(apiBaseUrl.current));
+      const res = await fetch(API_ENDPOINTS.RESPONDERS(getApiBaseUrl()));
       const data = await res.json();
       setResponders(data.responders || []);
     } catch (err) {
@@ -276,14 +269,29 @@ export default function WarRoom() {
         if (callAbortedRef.current) break;
 
         try {
-          const res = await fetch(API_ENDPOINTS.VOICE_SPEAK(apiBaseUrl.current), {
+          const voiceUrl = API_ENDPOINTS.VOICE_SPEAK(getApiBaseUrl());
+          console.log("Calling voice endpoint:", voiceUrl);
+          
+          const res = await fetch(voiceUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: currentText }),
           });
+          
+          if (!res.ok) {
+            console.error("Voice API error:", res.status, res.statusText);
+            break;
+          }
+          
           if (callAbortedRef.current) break;
           const data = await res.json();
-          if (data.success && data.audio && !callAbortedRef.current) {
+          
+          if (!data.success) {
+            console.error("Voice generation failed:", data.error || "Unknown error");
+            break;
+          }
+          
+          if (data.audio && !callAbortedRef.current) {
             const blob = new Blob(
               [Uint8Array.from(atob(data.audio), (c) => c.charCodeAt(0))],
               { type: "audio/mpeg" }
@@ -296,12 +304,22 @@ export default function WarRoom() {
                 currentAudioRef.current = null; 
                 resolve(); 
               };
-              audio.onerror = () => { currentAudioRef.current = null; resolve(); };
-              audio.play().catch(() => { currentAudioRef.current = null; resolve(); });
+              audio.onerror = (err) => { 
+                console.error("Audio playback error:", err);
+                currentAudioRef.current = null; 
+                resolve(); 
+              };
+              audio.play().catch((err) => { 
+                console.error("Audio play failed:", err);
+                currentAudioRef.current = null; 
+                resolve(); 
+              });
             });
+          } else {
+            console.warn("No audio data in response");
           }
         } catch (err) {
-          console.error("TTS error:", err);
+          console.error("TTS fetch error:", err);
         }
       }
       isPlayingRef.current = false;
@@ -336,7 +354,7 @@ export default function WarRoom() {
       if (callAbortedRef.current) return;
       setAiSteps((p) => [...p, "🧠 Understanding your situation..."]);
 
-      const res = await fetch(API_ENDPOINTS.EMERGENCY_PROCESS(apiBaseUrl.current), {
+      const res = await fetch(API_ENDPOINTS.EMERGENCY_PROCESS(getApiBaseUrl()), {
          method: "POST",
          headers: { "Content-Type": "application/json" },
          body: JSON.stringify({
@@ -580,8 +598,8 @@ export default function WarRoom() {
     setNearbyPlaces([]);
 
     // Reset conversation on backend for fresh JARVIS context
-    fetch(API_ENDPOINTS.CALL_RESET(apiBaseUrl.current), { method: "POST" }).catch(() => {});
-    fetch(API_ENDPOINTS.INCIDENTS_CLEAR(apiBaseUrl.current), { method: "POST" }).catch(() => {});
+    fetch(API_ENDPOINTS.CALL_RESET(getApiBaseUrl()), { method: "POST" }).catch(() => {});
+    fetch(API_ENDPOINTS.INCIDENTS_CLEAR(getApiBaseUrl()), { method: "POST" }).catch(() => {});
 
     addMessage("system", "🚨 Emergency line active. JARVIS AI ready to assist.");
     
@@ -644,7 +662,7 @@ export default function WarRoom() {
 
   const clearIncidents = async () => {
     try {
-      await fetch(API_ENDPOINTS.INCIDENTS_CLEAR(apiBaseUrl.current), { method: "POST" });
+      await fetch(API_ENDPOINTS.INCIDENTS_CLEAR(getApiBaseUrl()), { method: "POST" });
       setIncidents([]);
     } catch (err) {
       console.error(err);

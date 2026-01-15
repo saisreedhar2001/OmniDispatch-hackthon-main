@@ -751,7 +751,11 @@ async def text_to_speech(request: TextToSpeechRequest):
     """Convert text to speech using ElevenLabs API with your voice ID"""
     if not ELEVENLABS_API_KEY:
         print("⚠️ ElevenLabs API key not configured")
-        return {"error": "ElevenLabs API key not configured", "text": request.text}
+        return {
+            "success": False,
+            "error": "ElevenLabs API key not configured",
+            "text": request.text
+        }
     
     try:
         async with httpx.AsyncClient() as client:
@@ -785,11 +789,19 @@ async def text_to_speech(request: TextToSpeechRequest):
             else:
                 error_msg = f"ElevenLabs error: {response.status_code}"
                 print(f"❌ {error_msg}")
-                return {"error": error_msg, "text": request.text}
+                return {
+                    "success": False,
+                    "error": error_msg,
+                    "text": request.text
+                }
                 
     except Exception as e:
         print(f"❌ TTS error: {e}")
-        return {"error": str(e), "text": request.text}
+        return {
+            "success": False,
+            "error": str(e),
+            "text": request.text
+        }
 
 # ============================================================================
 # MAIN EMERGENCY PROCESSING ENDPOINT - JARVIS POWERED

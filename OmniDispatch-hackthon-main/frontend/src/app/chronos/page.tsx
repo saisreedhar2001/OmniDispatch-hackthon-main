@@ -117,12 +117,6 @@ interface ChronosData {
 }
 
 export default function ChronosPage() {
-   const apiBaseUrl = useRef<string>('')
-   
-   useEffect(() => {
-     apiBaseUrl.current = getApiBaseUrl()
-   }, [])
-
    const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
    const [clickedLocation, setClickedLocation] = useState<{ lat: number; lng: number } | null>(null)
    const [chronosData, setChronosData] = useState<ChronosData | null>(null)
@@ -168,7 +162,7 @@ export default function ChronosPage() {
   const fetchChronosData = async (lat: number, lng: number) => {
     setIsLoading(true)
     try {
-      const response = await fetch(API_ENDPOINTS.CHRONOS_ANALYZE(apiBaseUrl.current), {
+      const response = await fetch(API_ENDPOINTS.CHRONOS_ANALYZE(getApiBaseUrl()), {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({ lat, lng })
