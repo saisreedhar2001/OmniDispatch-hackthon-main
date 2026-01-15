@@ -159,7 +159,7 @@ export default function WarRoom() {
       setUserLocation({ lat, lng });
       // Initialize responders near user's location
       try {
-        await fetch("http://localhost:8000/api/responders/init", {
+        await fetch("https://omnidispatch-hackthon.onrender.com/api/responders/init", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lat, lng }),
@@ -216,7 +216,7 @@ export default function WarRoom() {
 
   const fetchResponders = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/responders");
+      const res = await fetch("https://omnidispatch-hackthon.onrender.com/api/responders");
       const data = await res.json();
       setResponders(data.responders || []);
     } catch (err) {
@@ -267,7 +267,7 @@ export default function WarRoom() {
         if (callAbortedRef.current) break;
 
         try {
-          const res = await fetch("http://localhost:8000/api/voice/speak", {
+          const res = await fetch("https://omnidispatch-hackthon.onrender.com/api/voice/speak", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: currentText }),
@@ -327,7 +327,7 @@ export default function WarRoom() {
       if (callAbortedRef.current) return;
       setAiSteps((p) => [...p, "🧠 Understanding your situation..."]);
 
-      const res = await fetch("http://localhost:8000/api/emergency/process-full", {
+      const res = await fetch("https://omnidispatch-hackthon.onrender.com/api/emergency/process-full", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -571,8 +571,8 @@ export default function WarRoom() {
     setNearbyPlaces([]);
 
     // Reset conversation on backend for fresh JARVIS context
-    fetch("http://localhost:8000/api/call/reset", { method: "POST" }).catch(() => {});
-    fetch("http://localhost:8000/api/incidents/clear", { method: "POST" }).catch(() => {});
+    fetch("https://omnidispatch-hackthon.onrender.com/api/call/reset", { method: "POST" }).catch(() => {});
+    fetch("https://omnidispatch-hackthon.onrender.com/api/incidents/clear", { method: "POST" }).catch(() => {});
 
     addMessage("system", "🚨 Emergency line active. JARVIS AI ready to assist.");
     
@@ -635,7 +635,7 @@ export default function WarRoom() {
 
   const clearIncidents = async () => {
     try {
-      await fetch("http://localhost:8000/api/incidents/clear", { method: "POST" });
+      await fetch("https://omnidispatch-hackthon.onrender.com/api/incidents/clear", { method: "POST" });
       setIncidents([]);
     } catch (err) {
       console.error(err);

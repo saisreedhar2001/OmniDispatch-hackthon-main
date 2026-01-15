@@ -161,7 +161,7 @@ export default function ChronosPage() {
   const fetchChronosData = async (lat: number, lng: number) => {
     setIsLoading(true)
     try {
-      const response = await fetch('http://localhost:8000/api/chronos/analyze', {
+      const response = await fetch('https://omnidispatch-hackthon.onrender.com/api/chronos/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lat, lng })
