@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { getApiBaseUrl, API_ENDPOINTS } from '@/config/api'
 import { 
   Activity, 
   ArrowLeft, 
@@ -116,16 +117,22 @@ interface ChronosData {
 }
 
 export default function ChronosPage() {
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [clickedLocation, setClickedLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [chronosData, setChronosData] = useState<ChronosData | null>(null)
-  const [selectedZone, setSelectedZone] = useState<RiskZone | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [hasZoomed, setHasZoomed] = useState(false)
-  const [locationPermission, setLocationPermission] = useState<'pending' | 'granted' | 'denied'>('pending')
-  const [isExporting, setIsExporting] = useState(false)
-  const reportRef = useRef<HTMLDivElement>(null)
+   const apiBaseUrl = useRef<string>('')
+   
+   useEffect(() => {
+     apiBaseUrl.current = getApiBaseUrl()
+   }, [])
+
+   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+   const [clickedLocation, setClickedLocation] = useState<{ lat: number; lng: number } | null>(null)
+   const [chronosData, setChronosData] = useState<ChronosData | null>(null)
+   const [selectedZone, setSelectedZone] = useState<RiskZone | null>(null)
+   const [isLoading, setIsLoading] = useState(true)
+   const [isAnalyzing, setIsAnalyzing] = useState(false)
+   const [hasZoomed, setHasZoomed] = useState(false)
+   const [locationPermission, setLocationPermission] = useState<'pending' | 'granted' | 'denied'>('pending')
+   const [isExporting, setIsExporting] = useState(false)
+   const reportRef = useRef<HTMLDivElement>(null)
 
   // Get user's location
   useEffect(() => {
@@ -161,11 +168,11 @@ export default function ChronosPage() {
   const fetchChronosData = async (lat: number, lng: number) => {
     setIsLoading(true)
     try {
-      const response = await fetch('https://omnidispatch-hackthon.onrender.com/api/chronos/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lat, lng })
-      })
+      const response = await fetch(API_ENDPOINTS.CHRONOS_ANALYZE(apiBaseUrl.current), {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ lat, lng })
+       })
       
       if (response.ok) {
         const data = await response.json()

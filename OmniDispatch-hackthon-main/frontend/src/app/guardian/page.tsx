@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { getApiBaseUrl, API_ENDPOINTS } from '@/config/api'
 import { 
   Shield, 
   ArrowLeft, 
@@ -132,16 +133,22 @@ interface EmergencyContact {
 }
 
 export default function GuardianPage() {
-  const [locationInput, setLocationInput] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [currentLocation, setCurrentLocation] = useState<{name: string, lat: number, lng: number} | null>(null)
-  const [nearbyBuildings, setNearbyBuildings] = useState<Building[]>([])
-  const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null)
-  const [buildingDetails, setBuildingDetails] = useState<BuildingDetails | null>(null)
-  const [showBuildingModal, setShowBuildingModal] = useState(false)
-  const [selectedFloor, setSelectedFloor] = useState(1)
-  const [viewMode, setViewMode] = useState<'3d' | 'blueprints' | 'protocols'>('3d')
+   const apiBaseUrl = useRef<string>('')
+   
+   useEffect(() => {
+     apiBaseUrl.current = getApiBaseUrl()
+   }, [])
+
+   const [locationInput, setLocationInput] = useState('')
+   const [searchQuery, setSearchQuery] = useState('')
+   const [loading, setLoading] = useState(false)
+   const [currentLocation, setCurrentLocation] = useState<{name: string, lat: number, lng: number} | null>(null)
+   const [nearbyBuildings, setNearbyBuildings] = useState<Building[]>([])
+   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null)
+   const [buildingDetails, setBuildingDetails] = useState<BuildingDetails | null>(null)
+   const [showBuildingModal, setShowBuildingModal] = useState(false)
+   const [selectedFloor, setSelectedFloor] = useState(1)
+   const [viewMode, setViewMode] = useState<'3d' | 'blueprints' | 'protocols'>('3d')
 
   // Search for location and nearby buildings
   const searchLocation = async () => {
@@ -149,11 +156,11 @@ export default function GuardianPage() {
     
     setLoading(true)
     try {
-      const response = await fetch('https://omnidispatch-hackthon.onrender.com/api/guardian/search-location', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ location: locationInput })
-      })
+      const response = await fetch(API_ENDPOINTS.GUARDIAN_SEARCH(apiBaseUrl.current), {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ location: locationInput })
+       })
       
       const data = await response.json()
       console.log('API Response:', data)
@@ -203,15 +210,15 @@ export default function GuardianPage() {
           const { latitude, longitude } = position.coords
           
           try {
-            const response = await fetch('https://omnidispatch-hackthon.onrender.com/api/guardian/search-location', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                location: 'Current Location',
-                lat: latitude,
-                lng: longitude
-              })
-            })
+            const response = await fetch(API_ENDPOINTS.GUARDIAN_SEARCH(apiBaseUrl.current), {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({ 
+                 location: 'Current Location',
+                 lat: latitude,
+                 lng: longitude
+               })
+             })
             
             const data = await response.json()
             
@@ -305,11 +312,11 @@ export default function GuardianPage() {
     setLoading(true)
     
     try {
-      const response = await fetch('https://omnidispatch-hackthon.onrender.com/api/guardian/building-details', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ building_id: building.id })
-      })
+      const response = await fetch(API_ENDPOINTS.GUARDIAN_BUILDING(apiBaseUrl.current), {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ building_id: building.id })
+       })
       
       const data = await response.json()
       

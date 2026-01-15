@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getApiBaseUrl, getWsUrl, API_ENDPOINTS } from "@/config/api";
 import {
   Phone,
   PhoneOff,
@@ -88,6 +89,14 @@ const DispatchMap = dynamic(() => import("@/components/dispatch/dispatch-map"), 
 });
 
 export default function WarRoom() {
+  // API Configuration
+  const apiBaseUrl = useRef<string>("");
+  
+  // Initialize API URL on client side
+  useEffect(() => {
+    apiBaseUrl.current = getApiBaseUrl();
+  }, []);
+
   // State
   const [isCallActive, setIsCallActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -159,7 +168,7 @@ export default function WarRoom() {
       setUserLocation({ lat, lng });
       // Initialize responders near user's location
       try {
-        await fetch("https://omnidispatch-hackthon.onrender.com/api/responders/init", {
+        await fetch(API_ENDPOINTS.RESPONDERS_INIT(apiBaseUrl.current), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lat, lng }),
@@ -184,7 +193,7 @@ export default function WarRoom() {
   // WebSocket
   useEffect(() => {
     const connect = () => {
-      const ws = new WebSocket("wss://omnidispatch-hackthon.onrender.com/ws");
+      const ws = new WebSocket(getWsUrl());
       ws.onopen = () => {
         setIsConnected(true);
       };
@@ -216,7 +225,7 @@ export default function WarRoom() {
 
   const fetchResponders = async () => {
     try {
-      const res = await fetch("https://omnidispatch-hackthon.onrender.com/api/responders");
+      const res = await fetch(API_ENDPOINTS.RESPONDERS(apiBaseUrl.current));
       const data = await res.json();
       setResponders(data.responders || []);
     } catch (err) {
@@ -267,7 +276,7 @@ export default function WarRoom() {
         if (callAbortedRef.current) break;
 
         try {
-          const res = await fetch("https://omnidispatch-hackthon.onrender.com/api/voice/speak", {
+          const res = await fetch(API_ENDPOINTS.VOICE_SPEAK(apiBaseUrl.current), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: currentText }),
@@ -327,11 +336,11 @@ export default function WarRoom() {
       if (callAbortedRef.current) return;
       setAiSteps((p) => [...p, "🧠 Understanding your situation..."]);
 
-      const res = await fetch("https://omnidispatch-hackthon.onrender.com/api/emergency/process-full", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          transcript,
+      const res = await fetch(API_ENDPOINTS.EMERGENCY_PROCESS(apiBaseUrl.current), {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           transcript,
           caller_location: { lat: userLocation.lat, lng: userLocation.lng },
         }),
         signal: abortControllerRef.current.signal,
@@ -571,8 +580,8 @@ export default function WarRoom() {
     setNearbyPlaces([]);
 
     // Reset conversation on backend for fresh JARVIS context
-    fetch("https://omnidispatch-hackthon.onrender.com/api/call/reset", { method: "POST" }).catch(() => {});
-    fetch("https://omnidispatch-hackthon.onrender.com/api/incidents/clear", { method: "POST" }).catch(() => {});
+    fetch(API_ENDPOINTS.CALL_RESET(apiBaseUrl.current), { method: "POST" }).catch(() => {});
+    fetch(API_ENDPOINTS.INCIDENTS_CLEAR(apiBaseUrl.current), { method: "POST" }).catch(() => {});
 
     addMessage("system", "🚨 Emergency line active. JARVIS AI ready to assist.");
     
@@ -635,7 +644,7 @@ export default function WarRoom() {
 
   const clearIncidents = async () => {
     try {
-      await fetch("https://omnidispatch-hackthon.onrender.com/api/incidents/clear", { method: "POST" });
+      await fetch(API_ENDPOINTS.INCIDENTS_CLEAR(apiBaseUrl.current), { method: "POST" });
       setIncidents([]);
     } catch (err) {
       console.error(err);
