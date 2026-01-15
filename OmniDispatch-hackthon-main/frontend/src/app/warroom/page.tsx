@@ -184,7 +184,7 @@ export default function WarRoom() {
   // WebSocket
   useEffect(() => {
     const connect = () => {
-      const ws = new WebSocket("ws://https://omnidispatch-hackthon.onrender.com/ws");
+      const ws = new WebSocket("wss://omnidispatch-hackthon.onrender.com/ws");
       ws.onopen = () => {
         setIsConnected(true);
       };
